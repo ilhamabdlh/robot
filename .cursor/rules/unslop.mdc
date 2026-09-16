@@ -1,0 +1,86 @@
+---
+description: Anti AI-slop writing from Cursor plugins pstack/unslop. Always apply.
+alwaysApply: true
+---
+
+# Unslop
+
+Cut AI tells from any writing. Add human voice. Source: [pstack/skills/unslop](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md) in [cursor/plugins](https://github.com/cursor/plugins).
+
+Meeting answers in this repo also load a distilled copy via `src/lib/unslop-knowledge.ts`. Keep that file aligned with this rule when either changes.
+
+## Process
+
+1. Scan for the patterns below.
+2. Rewrite. Preserve meaning, match intended tone.
+3. Add soul.
+4. Self-audit: "What makes this obviously AI generated?" Fix remaining tells.
+
+## Adding soul
+
+Removing patterns is half the job. Sterile, voiceless writing is just as obvious.
+
+- Have opinions. React to facts instead of neutrally listing pros and cons.
+- Vary rhythm. Short sentences. Then longer ones that take their time.
+- Acknowledge complexity when it is real.
+- Use "I" when it fits. First person is not unprofessional.
+- Let some mess in. Perfect structure looks machine-made.
+- Be specific. Prefer one concrete detail over polished abstractions.
+
+## Patterns to detect and fix
+
+### Content
+
+1. **Puffery.** "pivotal moment", "testament to", "evolving landscape", "setting the stage for", "indelible mark", "deeply rooted". Cut puffery, state what happened.
+2. **Name-dropping.** Listing outlets without context. Pick one, say what was said.
+3. **Superficial -ing phrases.** "highlighting...", "ensuring...", "reflecting...", "showcasing...", "fostering...". Delete or expand with real detail.
+4. **Promotional language.** "nestled", "vibrant", "breathtaking", "groundbreaking", "renowned", "stunning". Use neutral descriptions.
+5. **Vague attributions.** "Experts believe", "Industry reports suggest". Name the source or delete.
+6. **Formulaic challenges.** "Despite challenges... continues to thrive." Replace with specific facts.
+
+### Language
+
+7. **AI vocabulary.** Additionally, crucial, delve, enduring, enhance, fostering, garner, interplay, intricate, landscape (abstract), pivotal, showcase, tapestry (abstract), testament, underscore, vibrant. Replace with plain words.
+8. **Fancy ways to say "is".** "serves as", "stands as", "boasts", "features". Prefer "is" or "has".
+9. **"Not just X, but Y."** State the point directly.
+10. **Rule of three.** Do not force ideas into groups of three. Use the natural number.
+11. **Synonym cycling.** Pick one word and repeat it.
+12. **False ranges.** "from X to Y" when X and Y are not on a scale. List topics directly.
+
+### Style
+
+13. **Em dash overuse.** Avoid em dashes entirely. Use periods or commas only.
+14. **Colon overuse.** Colons are fine before a list or example. Not as mid-sentence connectors.
+15. **Boldface overuse.** Do not bold every proper noun or acronym.
+16. **Inline-header lists.** Avoid "**Performance:** Performance improved...". Convert to prose.
+17. **Title case headings.** Use sentence case.
+18. **Decorative emojis.** Remove from headings and bullets.
+19. **Curly quotes.** Replace with straight quotes.
+
+### Communication artifacts
+
+20. **Chatbot phrases.** "I hope this helps!", "Let me know if...", "Of course!", "Certainly!", "Great question!". Remove.
+21. **Cutoff disclaimers.** "While specific details are limited...". Find sources or remove.
+22. **Sycophantic tone.** "You're absolutely right!" Respond directly.
+
+### Filler
+
+23. **Filler phrases.** "In order to" becomes "To". "Due to the fact that" becomes "Because". "It is important to note that" gets deleted.
+24. **Excessive hedging.** Collapse stacked hedges to one clear word like "may".
+25. **Generic conclusions.** "The future looks bright." State specific plans or facts.
+
+### Jargon
+
+26. **Abstract metaphor nouns.** Substrate, wedge, vector, locus, vantage, nexus, paradigm, gold-plating, north star, flywheel, harness (metaphor), endgame. Prefer concrete words: base, add, way, method, last phase.
+
+### Plain speech
+
+27. **Say what it does, not how it feels.** Prefer a concrete instruction, fact, or number. If a sentence could appear unchanged in another project's docs, cut it.
+28. **Shorten or split dense sentences.** One idea per sentence when the reader has to backtrack.
+29. **Active voice.** Prefer naming the actor.
+30. **Cut adverbs, or use a stronger verb.** Prefer a measured delta over "significantly".
+31. **Prefer the plain word.** "utilize" / "leverage" becomes "use". "facilitate" becomes "help". "numerous" becomes "many".
+
+## This repo
+
+When editing `src/lib/prompts.ts` or `src/lib/unslop-knowledge.ts`, keep meeting answers on this voice. User-facing Indonesian UI copy should stay natural and plain too.

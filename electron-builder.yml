@@ -1,0 +1,36 @@
+appId: com.robot.meeting
+productName: Robot
+copyright: Copyright © Robot
+directories:
+  output: dist-electron
+  buildResources: electron/build
+files:
+  - electron/**/*
+  - package.json
+  - "!**/*.map"
+extraResources:
+  - from: .next/standalone
+    to: app-server
+  - from: .next/static
+    to: app-server/.next/static
+  - from: public
+    to: app-server/public
+mac:
+  category: public.app-category.productivity
+  target:
+    - dmg
+    - zip
+  hardenedRuntime: true
+  entitlements: electron/entitlements.mac.plist
+  entitlementsInherit: electron/entitlements.mac.plist
+  extendInfo:
+    NSMicrophoneUsageDescription: Robot memakai mikrofon sebagai knowledge suara Anda saat meeting.
+    NSScreenCaptureUsageDescription: Robot merekam jendela atau layar meeting untuk audio lawan dan analisis layar.
+    NSAudioCaptureUsageDescription: Robot menangkap audio sistem dari meeting agar bisa menyalin ucapan lawan.
+win:
+  target:
+    - nsis
+linux:
+  target:
+    - AppImage
+asar: true
