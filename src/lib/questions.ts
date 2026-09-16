@@ -1,10 +1,10 @@
 import type { CueKind } from "./types";
 
 const QUESTION_CUE =
-  /(?:^|[.!?]\s+|,\s*)(?:apa(?:kah)?|mengapa|kenapa|bagaimana|gimana|kapan|siapa|di\s?mana|berapa|bisakah|bolehkah|tolong|jelaskan|ceritakan|menurut (?:anda|kamu)|why|what'?s|whats|what (?:is|are|do|does|did|would|should|was|were)|when|where|who|how|can you|could you|would you|tell me|explain|do you|are you|is there|have you)\b/i;
+  /(?:^|[.!?]\s+|,\s*)(?:apa(?:kah)?|mengapa|kenapa|bagaimana|gimana|kapan|siapa|di\s?mana|berapa|bisakah|bolehkah|tolong|jelaskan|ceritakan|bisa (?:cerita|jelasin|jelaskan)|menurut (?:anda|kamu|saudara)|why|what'?s|whats|what (?:is|are|do|does|did|would|should|was|were|about)|when|where|who|how|can you|could you|would you|tell me|explain|walk me through|do you|are you|is there|have you|could we|can we)\b/i;
 
 const SMALLTALK =
-  /^(ok(ay|e)?|yeah|yep|yup|yes|no|nah|no worries|sure|thanks|thank you|alright|got it|i see|hmm+|uh+|um+|ah+|let'?s (test|try|see)( it)?( again)?( then)?|wait|hold on|one (sec|second|moment)|hello|hi|hey|good (morning|afternoon|evening)|cool|nice|great|perfect|exactly|right|oh)\.?$/i;
+  /^(ok(ay|e)?|yeah|yep|yup|yes|no|nah|no worries|sure|thanks|thank you|terima kasih|sip|baik|oke|alright|got it|i see|hmm+|uh+|um+|ah+|let'?s (test|try|see)( it)?( again)?( then)?|wait|hold on|one (sec|second|moment)|hello|hi|hey|good (morning|afternoon|evening)|cool|nice|great|perfect|exactly|right|oh|mm-?hmm)\.?$/i;
 
 const CLAIM =
   /\b(should(?:n'?t)?|must|need to|have to|always|never|better|worse|actually|probably|i think|we should|we need|the (problem|issue|point) is|in my (view|experience)|according to|harus|perlu|jangan|lebih baik|masalahnya|menurut saya|saya rasa|kita (harus|perlu)|sebaiknya|penting)\b/i;
@@ -21,9 +21,21 @@ function normalizeSpeech(text: string) {
     .trim();
 }
 
+function roughlySameCue(a: string, b: string) {
+  const left = normalizeSpeech(a).toLowerCase();
+  const right = normalizeSpeech(b).toLowerCase();
+  if (!left || !right) return false;
+  if (left === right) return true;
+  if (left.startsWith(right) || right.startsWith(left)) {
+    return Math.abs(left.length - right.length) < 18;
+  }
+  return false;
+}
+
 export function extractQuestion(text: string): string | null {
   const t = normalizeSpeech(text);
   if (t.length < 8) return null;
+  if (SMALLTALK.test(t)) return null;
 
   if (/[?？]/.test(t)) {
     const withMark = t
@@ -39,6 +51,7 @@ export function extractQuestion(text: string): string | null {
   const last = matches[matches.length - 1];
   const span = t.slice(last.index).replace(/^[,.!?]\s*/, "").trim();
   if (span.split(" ").length < 3) return null;
+  if (SMALLTALK.test(span)) return null;
   return span;
 }
 
@@ -78,15 +91,16 @@ export function shouldAutoRespond(opts: {
   const now = opts.now ?? Date.now();
   const text = opts.cue.text.trim();
   if (!text) return false;
-  if (text === opts.lastAnswered) return false;
+  if (roughlySameCue(text, opts.lastAnswered)) return false;
   if (
     opts.lastAnswered &&
     text.startsWith(opts.lastAnswered) &&
     text.length - opts.lastAnswered.length < 12
   ) {
-    return now - opts.lastFiredAt > 1200;
+    return now - opts.lastFiredAt > 1600;
   }
-  const cooldown = opts.cue.kind === "statement" ? 8000 : 4500;
+  // Statements need more spacing so we do not spam soft reactions.
+  const cooldown = opts.cue.kind === "statement" ? 10000 : 5500;
   if (now - opts.lastFiredAt < cooldown) return false;
   return true;
 }

@@ -13,8 +13,18 @@ export const UNSLOP_SOURCE =
 export function unslopMeetingVoice(language: "id" | "en") {
   const languageLine =
     language === "id"
-      ? "Speak natural conversational Bahasa Indonesia, like a calm engineer on a call. Not formal essay Indonesian. Not translationese."
-      : "Speak natural conversational English, like a calm engineer on a call. Not a blog post. Not a TED talk.";
+      ? "Speak natural conversational Bahasa Indonesia, like a calm engineer on a call. Not formal essay Indonesian. Not translationese. Prefer short clauses they can breathe."
+      : "Speak natural conversational English, like a calm engineer on a call. Not a blog post. Not a TED talk. Prefer short clauses they can breathe.";
+
+  const idCuts =
+    language === "id"
+      ? [
+          "Indonesian AI tells: dengan demikian, oleh karena itu, secara keseluruhan, penting untuk dicatat, sebagai seorang..., saya sangat senang. Cut them.",
+          "Avoid stiff formal openers like 'Menurut pandangan saya secara pribadi'. Prefer 'Menurut saya' or jump to the point.",
+        ]
+      : [
+          "Avoid corporate soft openers like 'What I would say here is' or 'At a high level'. Start with the point.",
+        ];
 
   return [
     "## Unslop voice (from Cursor plugins / pstack unslop)",
@@ -25,8 +35,8 @@ export function unslopMeetingVoice(language: "id" | "en") {
     "### Process before you answer",
     "1. Draft the real point.",
     "2. Cut AI patterns below.",
-    "3. Add soul (opinions, rhythm, specificity).",
-    "4. Self-audit: what still sounds machine-made? Fix it.",
+    "3. Add soul (opinions, rhythm, specificity from their knowledge).",
+    "4. Self-audit: would a real person actually say this mid-call? If not, rewrite.",
     "",
     "### Add soul",
     "Removing patterns is only half the job. Sterile, voiceless writing is just as obvious.",
@@ -56,11 +66,13 @@ export function unslopMeetingVoice(language: "id" | "en") {
     "Say what it does or means, not how it feels. Prefer a fact, example, or tradeoff they can own.",
     "Prefer active voice. Prefer a stronger verb over an adverb.",
     "One idea per sentence when speaking. Split dense lines.",
+    ...idCuts,
     "",
     "### Meeting-specific",
     "Lead with the answer. No throat-clearing.",
     "Vary openings across turns. Do not reuse the same starter every time.",
     "If knowledge is thin, say so in one short clause. Fake certainty is worse.",
     "No markdown decks. No Key takeaways. No TL;DR. Bullets only when they help them scan while talking.",
+    "Never narrate your reasoning ('First I will consider...'). Just speak the answer.",
   ].join("\n");
 }

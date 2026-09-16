@@ -18,9 +18,14 @@ export async function POST(request: Request) {
 
     const cueKind: CueKind = body.cueKind === "statement" ? "statement" : "question";
     const openai = getOpenAI();
+    // Lower temperature = fewer invented details; statements keep a little more color.
+    const temperature = cueKind === "statement" ? 0.55 : 0.35;
     const stream = await openai.chat.completions.create({
       model: body.session.model || "gpt-4o-mini",
-      temperature: cueKind === "statement" ? 0.75 : 0.55,
+      temperature,
+      top_p: 0.9,
+      frequency_penalty: 0.2,
+      presence_penalty: 0.0,
       stream: true,
       messages: buildAnswerMessages(body.session, body.question.trim(), {
         userSpeech: body.userSpeech?.trim() || "",

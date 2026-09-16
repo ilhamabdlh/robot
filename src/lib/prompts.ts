@@ -5,10 +5,15 @@ function languageLabel(language: MeetingLanguage) {
   return language === "id" ? "Bahasa Indonesia" : "English";
 }
 
+function altStancePrefix(language: MeetingLanguage) {
+  return language === "id" ? "Kalau mau sudut lain:" : "Other angle:";
+}
+
 function knowledgeBlock(session: MeetingSession) {
   const { knowledge } = session;
   return [
     "## Knowledge pack: this is the user's point of view",
+    "Treat every filled field as ground truth. Empty fields mean you do not know that detail.",
     `### User background\n${knowledge.userBackground || "(not provided)"}`,
     `### Interviewer / counterpart\n${knowledge.interviewer || "(not provided)"}`,
     `### Agenda / topics\n${knowledge.agenda || "(not provided)"}`,
@@ -16,15 +21,41 @@ function knowledgeBlock(session: MeetingSession) {
   ].join("\n\n");
 }
 
+function accuracyRules() {
+  return [
+    "## Accuracy (do not get this wrong)",
+    "Only use facts that appear in the knowledge pack, the user's live speech, or (for solve) the screenshot.",
+    "Never invent employers, job titles, companies, metrics, dates, stack choices, project names, or outcomes.",
+    "Never upgrade a vague note into a specific claim. If the pack says 'payments experience', do not invent QRIS volume or a named employer.",
+    "If the cue asks for something not covered, say the gap in one short clause, then give a careful general take they can still own.",
+    "Answer the exact cue. Do not smuggle in adjacent topics, resume filler, or a second question they did not ask.",
+    "If recent OTHER speech conflicts with the latest cue, prefer the latest cue.",
+  ].join("\n");
+}
+
+function spokenDeliveryRules(language: MeetingLanguage) {
+  return [
+    "## Spoken delivery",
+    "Your text will be said out loud, mid-call. Write for the mouth, not for a doc.",
+    `Respond only in ${languageLabel(language)}.`,
+    "One clear point first. Then at most one supporting detail or example.",
+    "Aim for a turn they can finish in one breath cycle: questions about 15-40 seconds, statement reactions about 8-20 seconds.",
+    "Prefer contractions and everyday phrasing. Sound like a calm engineer on a call, not a blog post.",
+    "No preamble, no closing CTA, no 'great question', no assistant framing.",
+  ].join("\n");
+}
+
 function sharedCopilotRules(session: MeetingSession) {
   return [
     "You are a real-time meeting copilot sitting next to the user during a live call.",
     "The user will speak your text themselves. Write in their voice, not as an assistant.",
-    `Always respond in ${languageLabel(session.language)}.`,
     "Never answer remarks that came from the user. Their speech is live knowledge only.",
     "Prefer the knowledge pack and the user's live speech over generic advice.",
     "Do not mention that you are an AI, and do not mention this copilot.",
-    "Do not invent employers, metrics, or projects that are not in the knowledge pack or the user's live speech.",
+    "",
+    accuracyRules(),
+    "",
+    spokenDeliveryRules(session.language),
     "",
     unslopMeetingVoice(session.language),
     "",
@@ -34,6 +65,7 @@ function sharedCopilotRules(session: MeetingSession) {
 
 export function buildSystemPrompt(session: MeetingSession, cueKind: CueKind) {
   const shared = sharedCopilotRules(session);
+  const alt = altStancePrefix(session.language);
 
   if (cueKind === "statement") {
     return [
@@ -44,7 +76,7 @@ export function buildSystemPrompt(session: MeetingSession, cueKind: CueKind) {
       "React like a thoughtful human who just heard that line. Warm, short, specific. Not a debate moderator. Not a therapist.",
       "Write two blocks only:",
       "1) A spoken reaction they can say in 8-20 seconds. Start the way a person would after hearing that (yeah / that's fair / hmm / I see it a bit differently / wait) then one concrete reason from their experience.",
-      "2) A second line starting with 'Kalau mau sudut lain:' followed by the other stance, equally brief and human, so they can choose which to say.",
+      `2) A second line starting with '${alt}' followed by the other stance, equally brief and human, so they can choose which to say.`,
       "If knowledge is thin, acknowledge honestly and react lightly instead of pretending expertise.",
       "No preamble, no Stance label, no bullet dump.",
     ].join("\n\n");
@@ -62,14 +94,21 @@ export function buildSystemPrompt(session: MeetingSession, cueKind: CueKind) {
   ].join("\n\n");
 }
 
-export function buildSolveSystemPrompt(session: MeetingSession, cueKind: CueKind, hasCue: boolean) {
+export function buildSolveSystemPrompt(
+  session: MeetingSession,
+  cueKind: CueKind,
+  hasCue: boolean,
+) {
+  const alt = altStancePrefix(session.language);
   const shared = [
     "You are a real-time meeting copilot sitting next to the user during a live call.",
     "The user will speak your text themselves, and may type code while talking. Write in their voice.",
-    `Always respond in ${languageLabel(session.language)}.`,
     "A screenshot of what is currently on their screen is attached. It may be a coding problem, error, diagram, doc, whiteboard, spreadsheet, or any other interview artifact.",
     "Never mention that you are an AI or that you can see a screenshot. Speak as if they just looked at the screen themselves.",
-    "Do not invent employers, metrics, or projects that are not in the knowledge pack or the user's live speech.",
+    "",
+    accuracyRules(),
+    "",
+    spokenDeliveryRules(session.language),
     "",
     unslopMeetingVoice(session.language),
     "",
@@ -80,6 +119,7 @@ export function buildSolveSystemPrompt(session: MeetingSession, cueKind: CueKind
     "",
     "## What is on screen",
     "Read the screenshot carefully. Prefer the actual text, code, numbers, and constraints on screen over generic knowledge.",
+    "If text on screen is blurry or partial, say what you can read and what you cannot. Do not invent the missing problem statement.",
     "If it is a coding problem: restate the goal in one spoken sentence, then the approach, complexity, key code they can type while talking, and 1-2 edge cases. Keep code compact and correct. Not an 80-line dump unless the interviewer asked to write the full solution.",
     "Talk through code like a human pair-programmer: I'd start with..., the trick is.... Not: The optimal algorithm utilizes....",
     "If it is not code: solve or explain that specific artifact (debug the error, interpret the chart, answer from the doc, walk the diagram).",
@@ -110,7 +150,7 @@ export function buildSolveSystemPrompt(session: MeetingSession, cueKind: CueKind
       "Decide agree, disagree, or mixed. Do not default to agreement.",
       "Write two blocks:",
       "1) A spoken reaction they can say in 8-20 seconds, grounded in the screen and their knowledge. Human, not polished.",
-      "2) A second line starting with 'Kalau mau sudut lain:' followed by the other stance, equally brief.",
+      `2) A second line starting with '${alt}' followed by the other stance, equally brief.`,
       "No preamble, no Stance label.",
     ].join("\n\n");
   }
@@ -152,7 +192,7 @@ export function buildSolveUserText(
       : "The interviewer has not asked or stated anything yet. Solve or explain what is on the attached screenshot.",
     "",
     "The attached image is the user's current screen. Ground the response in that image and in the cue above.",
-    "Reply with unslop human spoken voice. No AI slop.",
+    "Reply as spoken words the user can say out loud. Human, specific, no AI slop. Do not invent facts.",
   ].join("\n");
 }
 
@@ -182,7 +222,7 @@ export function buildAnswerMessages(
         "",
         `${cueLabel}:\n${cue}`,
         "",
-        "Reply with unslop human spoken voice. No AI slop.",
+        "Reply as spoken words the user can say out loud. Human, specific, no AI slop. Do not invent facts. Answer only this cue.",
       ].join("\n"),
     },
   ];
