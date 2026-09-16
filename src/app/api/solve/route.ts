@@ -29,9 +29,14 @@ export async function POST(request: Request) {
     const cue = body.question?.trim() || "";
     const cueKind: CueKind = body.cueKind === "statement" ? "statement" : "question";
     const openai = getOpenAI();
+    // Keep solve cooler so code/constraints on screen are not invented.
+    const temperature = cueKind === "statement" ? 0.45 : 0.2;
     const stream = await openai.chat.completions.create({
       model: body.session.model || "gpt-4o-mini",
-      temperature: cueKind === "statement" ? 0.65 : 0.35,
+      temperature,
+      top_p: 0.85,
+      frequency_penalty: 0.15,
+      presence_penalty: 0.0,
       stream: true,
       messages: [
         {
